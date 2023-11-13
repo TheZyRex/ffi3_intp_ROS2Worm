@@ -221,8 +221,8 @@ void WormGridNode::generateLevel() {
     Board.board.at(y).row.at(0).zeichen = WormConstants::WormCharacters::BARRIER;
     
     // right side of board
-    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH).color = COLOR_WHITE;
-    Board.board.at(y).row.at(0).zeichen = WormConstants::WormCharacters::BARRIER;
+    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).color = COLOR_WHITE;
+    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).zeichen = WormConstants::WormCharacters::BARRIER;
   }
 }
 
