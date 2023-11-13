@@ -76,6 +76,9 @@ class WormGridNode : public rclcpp::Node {
     void runGame();
     void endGame();
 
+    // methods to implement specific gameplay functions
+    void generateLevel();
+
     // callback methods for publishing
     void GameIdPublishCallback();
     void BoardInfoPublishCallback();
@@ -158,6 +161,9 @@ WormGridNode::WormGridNode() : Node("worm_grid_node") {
   }
   Board.set__board(boardVector);
 
+  // but gameplay elements onto the board
+  generateLevel();
+
   // initialize player list
   joinedPlayers = std::vector<int32_t>();
 
@@ -166,6 +172,7 @@ WormGridNode::WormGridNode() : Node("worm_grid_node") {
 
   // start the lobby
   currentGameState = GameState::LOBBY;
+
 }
 
 /**
@@ -191,6 +198,32 @@ void WormGridNode::runGame() {
 */
 void WormGridNode::endGame() {
 
+}
+
+/**
+ * @brief Put barriers and other elements on the board.
+*/
+void WormGridNode::generateLevel() {
+  // put barriers all around the board
+  for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
+    // top of board
+    Board.board.at(0).row.at(x).color = COLOR_WHITE;
+    Board.board.at(0).row.at(x).zeichen = WormConstants::WormCharacters::BARRIER;
+
+    // bottom of board
+    Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).color = COLOR_WHITE;
+    Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).zeichen = WormConstants::WormCharacters::BARRIER;
+  }
+
+  for (int y = 1; y < WormConstants::BOARD_HEIGHT - 1; y++) {
+    // left side of board
+    Board.board.at(y).row.at(0).color = COLOR_WHITE;
+    Board.board.at(y).row.at(0).zeichen = WormConstants::WormCharacters::BARRIER;
+    
+    // right side of board
+    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH).color = COLOR_WHITE;
+    Board.board.at(y).row.at(0).zeichen = WormConstants::WormCharacters::BARRIER;
+  }
 }
 
 /**
