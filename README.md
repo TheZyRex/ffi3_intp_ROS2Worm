@@ -1,6 +1,15 @@
 # ffi3_intp_ROS2Worm
 
 ## Navigation Node
+publishes to the following topics:
+
+- PlayerInput -- using Message Type: ros2_worm_multiplayer::msg::PlayerInput
+
+subscribes to the following topics:
+
+- GameStart -- using message type: std_msgs::msg:Int32
+
+Will make a request to a server to join the game -- using Interface: ros2_worm_multiplayer::srv::JoinServer
 
 ## Display Node
 
@@ -16,3 +25,5 @@ publishes to the following topics:
 subscribes to the following topics:
 
 - PlayerInput  -- using Message Type: ros2_worm_multiplayer::msg::PlayerInput  
+
+Will respond to a Client, giving them their wormid -- using Interface: ros2_worm_multiplayer::srv::JoinServer
