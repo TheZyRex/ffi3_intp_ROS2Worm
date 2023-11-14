@@ -89,7 +89,7 @@ target_link_libraries(worm_navigation_node ncurses)
 
 
 
-ament_python_install.package(${PROJECT_NAME})
+ament_python_install_package(${PROJECT_NAME}_python)
 install(PROGRAMS
   scripts/py_node.py
   DESTINATION lib/${PROJECT_NAME}
