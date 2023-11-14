@@ -53,7 +53,7 @@ void WormDisplayNode::initializeColors() {
   // Define colors of the game
   start_color();
   //Loop through all 7 Colors and generate a Color Pair by their own ID with background Black
-  for(int i = 0; i<COLOR_WHITE; i++)
+  for(int i = 0; i<=COLOR_WHITE; i++)
   {
     init_pair(i, i, COLOR_BLACK);
   }
