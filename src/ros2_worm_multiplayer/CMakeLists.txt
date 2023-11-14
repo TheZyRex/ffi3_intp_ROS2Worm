@@ -13,6 +13,8 @@ find_package(rclcpp REQUIRED)
 find_package(Curses REQUIRED)
 find_package(std_msgs REQUIRED) # only needed for testing purposes - mario
 find_package(rosidl_default_generators REQUIRED) # testing - Joschie
+find_package(ament_cmake_python REQUIRED)
+find_package(rclpy REQUIRED)
 #find_package(ros2_worm_multiplayer REQUIRED)
 
 set(msg_files
@@ -84,5 +86,13 @@ target_link_libraries(worm_display_node "${cpp_typesupport_target}")
 # add your nodes here that require ncurses
 target_link_libraries(worm_display_node ncurses)
 target_link_libraries(worm_navigation_node ncurses)
+
+
+
+ament_python_install.package(${PROJECT_NAME})
+install(PROGRAMS
+  scripts/py_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
