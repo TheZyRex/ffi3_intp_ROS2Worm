@@ -35,22 +35,27 @@ class Navigation : public rclcpp::Node
 		};
 
 		/* */
-		void start_gamelobby();
+		void gameserver_selection();
 
 		/* */
-		void inputLoop();
+		void join_gameserver();
+
+		/* */
+		void user_input_loop();
+
+		/* */
+		void quit_gameserver();
 
 		/* */
 		void gamestart_callback(const std_msgs::msg::Int32& msg);
 
 		/* */
-		void gamelobby();
-
-		/* */
 		void timer_callback();
 		
 		/* helper methods */
-		void add_gameserver(const std_msgs::msg::Int32& msg);
+		void draw_gameserver_selection_lobby();
+		void draw_game_instructions();
+		void add_gameid_to_vector(const std_msgs::msg::Int32& msg);
 
 		/* Game Server IDs */
 		std::vector<int> game_ids_;
@@ -59,7 +64,6 @@ class Navigation : public rclcpp::Node
 		/* */
 		enum gamestates cur_gamestate;
 
-
 		/* Msg type that includes direction that a specifc worm goes */
 		ros2_worm_multiplayer::msg::PlayerInput pInput;
 
@@ -67,7 +71,7 @@ class Navigation : public rclcpp::Node
 		rclcpp::TimerBase::SharedPtr timer_;
 
 		/* Publisher for PlayerInputs */
-		rclcpp::Publisher<ros2_worm_multiplayer::msg::PlayerInput>::SharedPtr pInput_pub;
+		rclcpp::Publisher<ros2_worm_multiplayer::msg::PlayerInput>::SharedPtr pInput_pub_;
 
 		/* Subscriber to GameStart */
 		rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr gamestart_sub_;
@@ -104,7 +108,7 @@ Navigation::Navigation()
 		rmw_qos_profile_services_default, this->client_cb_group_);
 
 	/* rclcpP::QoS(10) provides default QoS profile with history depth of 10 */
-	this->pInput_pub = this->create_publisher<ros2_worm_multiplayer::msg::PlayerInput>(WormTopics::PlayerInput, rclcpp::QoS(10));
+	this->pInput_pub_ = this->create_publisher<ros2_worm_multiplayer::msg::PlayerInput>(WormTopics::PlayerInput, rclcpp::QoS(10));
 
 	/* Create a timer to check for keyboard input every 100ms */
 	this->timer_ = create_wall_timer(WormConstants::TICK_TIME, std::bind(&Navigation::timer_callback, this));
@@ -114,10 +118,10 @@ Navigation::Navigation()
 /**
  * 
 */
-void Navigation::start_gamelobby()
+void Navigation::join_gameserver()
 {
-	/* gamelobby blocks until a game was selected */
-	//this->gamelobby();
+	/* gameserver_selection blocks until a game was selected */
+	//this->gameserver_selection();
 
 	if (this->cur_game_id > -1)
 	{
@@ -164,19 +168,30 @@ void Navigation::start_gamelobby()
 
 
 /**
- * Testing
+ * 
 */
-void Navigation::gamestart_callback(const std_msgs::msg::Int32& msg)
+void Navigation::quit_gameserver()
 {
-	/* collect all gameids in a vector list */
-	this->add_gameserver(msg);
+	/* TODO Service Request to quit from gameserver */
+	cleanupCursesApp();
+	rclcpp::shutdown();
 }
 
 
 /**
- *  
+ * @brief
 */
-void Navigation::gamelobby()
+void Navigation::gamestart_callback(const std_msgs::msg::Int32& msg)
+{
+	/* collect all gameids in a vector list */
+	this->add_gameid_to_vector(msg);
+}
+
+
+/**
+ * @brief 
+*/
+void Navigation::gameserver_selection()
 {
 	char input;
 
@@ -214,25 +229,26 @@ void Navigation::gamelobby()
 
 
 /**
- * 
+ * @brief
 */
 void Navigation::timer_callback()
 {
 	switch (this->cur_gamestate)
 	{
 		case PRELOBBY:
-			this->gamelobby();
+			this->gameserver_selection();
 			break;
 
 		case LOBBY: 
-			this->start_gamelobby();
+			this->join_gameserver();
 			break;
 
 		case INGAME:
-			this->inputLoop();
+			this->user_input_loop();
 			break;
 
 		case POSTGAME:
+			this->quit_gameserver();
 			break;
 	}
 }
@@ -241,7 +257,7 @@ void Navigation::timer_callback()
 /**
  * @brief Adds a game id to the list of available game servers if it doesnt exist already
 */
-void Navigation::add_gameserver(const std_msgs::msg::Int32& msg)
+void Navigation::add_gameid_to_vector(const std_msgs::msg::Int32& msg)
 {
 	if (std::find(this->game_ids_.begin(), this->game_ids_.end(), msg.data) == this->game_ids_.end())
 	{
@@ -251,23 +267,25 @@ void Navigation::add_gameserver(const std_msgs::msg::Int32& msg)
 
 
 /**
- * 
+ * @brief
 */
-void Navigation::inputLoop()
+void Navigation::user_input_loop()
 {
-	/* Check if a key is pressed */
 	int key;
 	bool dirty = false;
+	static ros2_worm_multiplayer::msg::PlayerInput last; 
 
+	/* TODO Game Menu */
 	clear();
+	printw("Nutze Pfeiltasten zum Navigieren und q um das game zu beenden");
+	refresh();
 
 	if ((key = getch()) != ERR)
 	{
 	  switch (key)
 	  {
-	  case 'q':
+	  case 'q': /* Quit the Game */
 			this->cur_gamestate = POSTGAME;
-			dirty = true;
 	  	break;
 	
 	  case KEY_UP :
@@ -295,9 +313,11 @@ void Navigation::inputLoop()
 	  	break;
 	  }
 
-		if (dirty == true)
+		/* if there is change in direction, publish user input */
+		if (dirty == true && this->pInput != last)
 		{
-			this->pInput_pub->publish(this->pInput);
+			this->pInput_pub_->publish(this->pInput);
+			last = this->pInput;
 			dirty = false;
 		}
 	}
