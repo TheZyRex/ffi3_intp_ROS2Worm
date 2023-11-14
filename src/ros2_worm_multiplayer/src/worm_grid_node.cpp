@@ -28,7 +28,6 @@ extern "C" {
 // ############################################################################
 
 typedef struct {
-  int32_t wormId;
   int headIndex;
   std::vector<std::pair<int, int>> positions;
 } Worm;
@@ -57,7 +56,9 @@ class WormGridNode : public rclcpp::Node {
       const std::shared_ptr<ros2_worm_multiplayer::srv::JoinServer::Request> request,
       std::shared_ptr<ros2_worm_multiplayer::srv::JoinServer::Response> response
     );
+
     std::vector<int32_t> joinedPlayers;
+    std::map<int32_t, Worm> worms;  // dictionary of the joined worms and associated data structures
 
   private:
     // callback groups
@@ -89,6 +90,7 @@ class WormGridNode : public rclcpp::Node {
 
     // methods to implement specific gameplay functions
     void generateLevel();
+    void generateNewWorm(int32_t wormId);
 
     // callback methods for publishing
     void GameIdPublishCallback();
@@ -196,6 +198,10 @@ void WormGridNode::runLobby() {
   } else {
     RCLCPP_INFO(this->get_logger(), "Starting game.");
     
+    for (auto id: joinedPlayers) {
+      generateNewWorm(id);
+    }
+
     currentGameState = GameState::GAME;
   }
 }
@@ -238,6 +244,27 @@ void WormGridNode::generateLevel() {
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).color = COLOR_WHITE;
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).zeichen = WormConstants::WormCharacters::BARRIER;
   }
+}
+
+/**
+ * @brief Put a new player on the board.
+*/
+void WormGridNode::generateNewWorm(int32_t wormId) {
+  int currX = rand() % WormConstants::BOARD_LENGTH;
+  int currY = rand() % WormConstants::BOARD_HEIGHT;
+
+  while (Board.board.at(currY).row.at(currX).zeichen != WormConstants::EMPTY) {
+    int currX = rand() % WormConstants::BOARD_LENGTH;
+    int currY = rand() % WormConstants::BOARD_HEIGHT;
+  }
+  Worm currWorm;
+  currWorm.headIndex = 0;
+
+  std::vector<std::pair<int, int>> positions;
+  positions.push_back(std::make_pair(currX, currY));
+
+  currWorm.positions = positions;
+  worms.insert(std::make_pair(wormId, currWorm));
 }
 
 /**
