@@ -183,6 +183,7 @@ void WormGridNode::runLobby() {
     GameIdPublishCallback();
   } else {
     currentGameState = GameState::GAME;
+    RCLCPP_INFO(this->get_logger(), "Starting game.");
   }
 }
 
@@ -300,6 +301,7 @@ void WormGridNode::handleJoin(
     }
     RCLCPP_INFO(this->get_logger(), "Player joined. Given ID: %d", newWormId);
     response->set__wormid(newWormId);
+    joinedPlayers.push_back(newWormId);
 
   // Handle disconnecting
   } else if (request->srv_request == WormConstants::ServiceRequests::SRV_DISCONNECT) {
