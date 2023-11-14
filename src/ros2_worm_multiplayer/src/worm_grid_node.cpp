@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <ctime>
 #include <chrono>
+#include <queue>
+
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32.hpp"
 
@@ -20,6 +22,16 @@
 extern "C" {
 #include <curses.h>
 }
+
+// ############################################################################
+// WORM STRUCT
+// ############################################################################
+
+typedef struct {
+  int32_t wormId;
+  int headIndex;
+  std::vector<std::pair<int, int>> positions;
+} Worm;
 
 
 // ############################################################################
@@ -91,7 +103,7 @@ class WormGridNode : public rclcpp::Node {
 
 
 // ############################################################################
-// NODE METHOD DEFINITIONS
+// GRID NODE METHOD DEFINITIONS
 // ############################################################################
 
 /**
@@ -182,8 +194,9 @@ void WormGridNode::runLobby() {
   if (joinedPlayers.size() < WormConstants::MAX_PLAYERS) {
     GameIdPublishCallback();
   } else {
-    currentGameState = GameState::GAME;
     RCLCPP_INFO(this->get_logger(), "Starting game.");
+    
+    currentGameState = GameState::GAME;
   }
 }
 
