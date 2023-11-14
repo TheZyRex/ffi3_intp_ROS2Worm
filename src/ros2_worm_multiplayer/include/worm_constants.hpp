@@ -9,6 +9,7 @@
 namespace WormConstants 
 {
   constexpr std::chrono::milliseconds TICK_TIME{100};
+  constexpr std::chrono::milliseconds RESPONSE_TIMEOUT{1000};
   constexpr const int GRID_MESSAGE_QUEUE_LENGTH = 10;
 
   /* Size of board */
