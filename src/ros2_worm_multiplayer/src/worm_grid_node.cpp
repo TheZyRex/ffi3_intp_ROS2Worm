@@ -49,8 +49,7 @@ class WormGridNode : public rclcpp::Node {
 
   private:
     // callback groups
-    rclcpp::CallbackGroup::SharedPtr timer_cbg_;
-    rclcpp::CallbackGroup::SharedPtr playerInput_cbg_;
+    rclcpp::CallbackGroup::SharedPtr main_cbg_;
     rclcpp::CallbackGroup::SharedPtr joinService_cbg_;
 
     // publishers
@@ -102,21 +101,22 @@ WormGridNode::WormGridNode() : Node("worm_grid_node") {
   gameId_publisher_ = this->create_publisher<std_msgs::msg::Int32>(WormTopics::GameStart, WormConstants::GRID_MESSAGE_QUEUE_LENGTH);
   boardInfo_publisher_ = this->create_publisher<ros2_worm_multiplayer::msg::Board>(WormTopics::BoardInfo, WormConstants::GRID_MESSAGE_QUEUE_LENGTH);
 
+  // initialize main callback group
+  main_cbg_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
   // initialize tick timer
-  timer_cbg_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   tick_timer_ = this->create_wall_timer(
     WormConstants::TICK_TIME,
     std::bind(
       &WormGridNode::RunTick, 
       this
     ),
-    timer_cbg_
+    main_cbg_
   );
 
   // initialize player input subscription 
-  playerInput_cbg_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::SubscriptionOptions playerInput_options;
-  playerInput_options.callback_group = playerInput_cbg_;
+  playerInput_options.callback_group = main_cbg_;
   playerInput_subscription_ = this->create_subscription<ros2_worm_multiplayer::msg::PlayerInput>(
     WormTopics::PlayerInput, 
     WormConstants::GRID_MESSAGE_QUEUE_LENGTH, 
