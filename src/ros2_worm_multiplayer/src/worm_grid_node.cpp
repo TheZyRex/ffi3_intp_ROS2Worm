@@ -30,6 +30,7 @@ extern "C" {
 typedef struct {
   int headIndex;
   std::vector<std::pair<int, int>> positions;
+  std::pair<int, int> currMove;
 } Worm;
 
 
@@ -211,6 +212,32 @@ void WormGridNode::runLobby() {
 */
 void WormGridNode::runGame() {
 
+  // remove all worms
+  for (int y = 0; y < WormConstants::BOARD_HEIGHT; y++) {
+    for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
+      if (
+        Board.board.at(y).row.at(x).zeichen == WormConstants::WormCharacters::WORM_BODY
+        || Board.board.at(y).row.at(x).zeichen == WormConstants::WormCharacters::WORM_HEAD
+      ) {
+        Board.board.at(y).row.at(x).zeichen = WormConstants::WormCharacters::EMPTY;
+        Board.board.at(y).row.at(x).color = COLOR_BLACK;
+      }
+    }
+  }
+
+  // redraw changed worms
+  for (auto [id, worm]: worms) {
+    for (int posIndex = 0; posIndex < worm.positions.size(); posIndex++) {
+      if (posIndex == worm.headIndex) {
+        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_HEAD;
+        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = COLOR_WHITE;
+      } else {
+        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_BODY;
+        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = COLOR_WHITE;
+      }
+    }
+  }
+
 }
 
 /**
@@ -254,14 +281,16 @@ void WormGridNode::generateNewWorm(int32_t wormId) {
   int currY = rand() % WormConstants::BOARD_HEIGHT;
 
   while (Board.board.at(currY).row.at(currX).zeichen != WormConstants::EMPTY) {
-    int currX = rand() % WormConstants::BOARD_LENGTH;
-    int currY = rand() % WormConstants::BOARD_HEIGHT;
+    currX = rand() % WormConstants::BOARD_LENGTH;
+    currY = rand() % WormConstants::BOARD_HEIGHT;
   }
   Worm currWorm;
   currWorm.headIndex = 0;
 
   std::vector<std::pair<int, int>> positions;
   positions.push_back(std::make_pair(currX, currY));
+
+  currWorm.currMove = std::make_pair(0, 0);
 
   currWorm.positions = positions;
   worms.insert(std::make_pair(wormId, currWorm));
@@ -296,9 +325,7 @@ void WormGridNode::PlayerInputCallback(const ros2_worm_multiplayer::msg::PlayerI
 /**
  * @brief Run all methods that need to be run in a tick.
 */
-void WormGridNode::RunTick() {
-  BoardInfoPublishCallback();
-  
+void WormGridNode::RunTick() {  
   // run the tick according to GameState
   switch (currentGameState) {
   case GameState::LOBBY:
@@ -316,6 +343,9 @@ void WormGridNode::RunTick() {
   default:
     break;
   }
+
+  // publish the game board after all changes have had an effect
+  BoardInfoPublishCallback();
 }
 
 /**
