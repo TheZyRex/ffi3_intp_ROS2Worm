@@ -225,6 +225,21 @@ void WormGridNode::runGame() {
     }
   }
 
+  // process worm movement
+  for (auto [id, worm]: worms) {
+    std::pair<int, int> headPos = worm.positions.at(worm.headIndex);
+
+    worm.headIndex++;
+    if (worm.headIndex >= worm.positions.size()) {
+      worm.headIndex = 0;
+    }
+
+    headPos.first += worm.currMove.first;
+    headPos.second += worm.currMove.second;
+
+    worm.positions.at(worm.headIndex) = headPos;    
+  }
+
   // redraw changed worms
   for (auto [id, worm]: worms) {
     for (int posIndex = 0; posIndex < worm.positions.size(); posIndex++) {
