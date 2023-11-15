@@ -319,7 +319,8 @@ void WormGridNode::BoardInfoPublishCallback() {
 */
 void WormGridNode::PlayerInputCallback(const ros2_worm_multiplayer::msg::PlayerInput input) {
   RCLCPP_INFO(this->get_logger(), "Player %d: Received input (%d/%d).", input.wormid, input.dir.dx, input.dir.dy);
-
+  worms[input.wormid].currMove.first = input.dir.dx;
+  worms[input.wormid].currMove.first = input.dir.dy;
 }
 
 /**
