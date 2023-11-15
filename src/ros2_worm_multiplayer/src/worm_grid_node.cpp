@@ -226,18 +226,19 @@ void WormGridNode::runGame() {
   }
 
   // process worm movement
-  for (auto [id, worm]: worms) {
-    std::pair<int, int> headPos = worms[id].positions.at(worms[id].headIndex);
+  /* fix: we need to have references of id and worm instead of a local copy */
+  for (auto& [id, worm]: worms) {
+    std::pair<int, int> headPos = worm.positions.at(worm.headIndex);
 
-    worms[id].headIndex++;
-    if (worms[id].headIndex >= worms[id].positions.size()) {
-      worms[id].headIndex = 0;
+    worm.headIndex++;
+    if (worm.headIndex >= worm.positions.size()) {
+      worm.headIndex = 0;
     }
 
-    headPos.first += worms[id].currMove.first;
-    headPos.second += worms[id].currMove.second;
+    headPos.first += worm.currMove.first;
+    headPos.second += worm.currMove.second;
 
-    worms[id].positions.at(worms[id].headIndex) = headPos;    
+    worm.positions.at(worm.headIndex) = headPos;    
   }
 
   // redraw changed worms
