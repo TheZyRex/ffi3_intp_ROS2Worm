@@ -227,17 +227,17 @@ void WormGridNode::runGame() {
 
   // process worm movement
   for (auto [id, worm]: worms) {
-    std::pair<int, int> headPos = worm.positions.at(worm.headIndex);
+    std::pair<int, int> headPos = worms[id].positions.at(worms[id].headIndex);
 
-    worm.headIndex++;
-    if (worm.headIndex >= worm.positions.size()) {
-      worm.headIndex = 0;
+    worms[id].headIndex++;
+    if (worms[id].headIndex >= worms[id].positions.size()) {
+      worms[id].headIndex = 0;
     }
 
-    headPos.first += worm.currMove.first;
-    headPos.second += worm.currMove.second;
+    headPos.first += worms[id].currMove.first;
+    headPos.second += worms[id].currMove.second;
 
-    worm.positions.at(worm.headIndex) = headPos;    
+    worms[id].positions.at(worms[id].headIndex) = headPos;    
   }
 
   // redraw changed worms
@@ -335,7 +335,7 @@ void WormGridNode::BoardInfoPublishCallback() {
 void WormGridNode::PlayerInputCallback(const ros2_worm_multiplayer::msg::PlayerInput input) {
   RCLCPP_INFO(this->get_logger(), "Player %d: Received input (%d/%d).", input.wormid, input.dir.dx, input.dir.dy);
   worms[input.wormid].currMove.first = input.dir.dx;
-  worms[input.wormid].currMove.first = input.dir.dy;
+  worms[input.wormid].currMove.second = input.dir.dy;
 }
 
 /**
