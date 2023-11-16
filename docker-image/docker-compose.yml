@@ -1,0 +1,14 @@
+version: '3'
+services:
+  ros2_worm_server:
+    image: test:latest
+    container_name: worm_server
+    user: "1000:1000"
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=24
+      - ROS_LOCALHOST_ONLY=0
+    volumes:
+      - ./ros2_worm_entrypoint.sh:/home/ffi3/ros2_worm_entrypoint.sh
+    entrypoint: 
+      - /home/ffi3/ros2_worm_entrypoint.sh

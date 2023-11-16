@@ -4,8 +4,6 @@ ARG USERNAME=ffi3
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-ENV ROS_DOMAIN_ID=24
-ENV ROS_LOCALHOST_ONLY=0
 ENV SHELL [ "/bin/bash" ]
 
 # Create the user
@@ -26,15 +24,18 @@ RUN apt-get install -y python3-pip python3-rosdep python3-colcon-common-extensio
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 USER $USERNAME
-CMD ["/bin/bash"]
 
 WORKDIR /home/$USERNAME
 RUN git clone https://github.com/TheZyRex/ffi3_intp_ROS2Worm.git -b main
 WORKDIR /home/$USERNAME/ffi3_intp_ROS2Worm
 
-RUN rosdep fix-permissions\ 
-&& rosdep update\
-&& rosdep install -i --from-path src --rosdistro humble -y
+RUN rosdep fix-permissions \ 
+		&& rosdep update \
+		&& rosdep install -i --from-path src --rosdistro humble -y
 
 COPY ros2_worm_entrypoint.sh /home/$USERNAME/.
-ENTRYPOINT [ "/home/$USERNAME/ros2_worm_entrypoint.sh" ]
+RUN sudo chown $USERNAME:$USERNAME /home/$USERNAME/ros2_worm_entrypoint.sh
+RUN sudo chmod +x /home/$USERNAME/ros2_worm_entrypoint.sh
+ENTRYPOINT [ "/home/ffi3/ros2_worm_entrypoint.sh" ]
+
+CMD ["/bin/bash"]
