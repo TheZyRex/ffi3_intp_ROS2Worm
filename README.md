@@ -11,7 +11,15 @@ subscribes to the following topics:
 
 Will make a request to a server to join the game -- using Interface: ros2_worm_multiplayer::srv::JoinServer
 
-## Display Node
+## Display Node(s)
+
+publishes to the following topics:
+
+- None
+  
+subscribes to the following topics:
+
+- BoardInfo -- using Message Type: ros2_worm_multiplayer::msg::Board
 
 ## Grid Node
 
