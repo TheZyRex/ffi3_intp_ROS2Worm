@@ -559,7 +559,7 @@ int main(int argc, char ** argv)
 
   std::srand(std::time(nullptr));
 
-  rclcpp::executors::SingleThreadedExecutor executor;
+  rclcpp::executors::MultiThreadedExecutor executor;
   auto worm_grid_node = std::make_shared<WormGridNode>();
   executor.add_node(worm_grid_node);
   try {
