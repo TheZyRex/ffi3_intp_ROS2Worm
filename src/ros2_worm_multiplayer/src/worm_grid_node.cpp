@@ -35,6 +35,17 @@ typedef struct {
 
 static const std::pair<int, int> INVALID_POS = std::make_pair(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
 
+/**
+ * @brief Return true with the given probability in percent.
+*/
+bool randomChance(int percentage) {
+  if (rand() % 100 < percentage) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // ############################################################################
 // GRID NODE CLASS DECLARATION
 // ############################################################################
