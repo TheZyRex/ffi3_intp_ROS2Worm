@@ -456,6 +456,7 @@ void WormGridNode::handleJoin(
       std::remove(joinedPlayers.begin(), joinedPlayers.end(), request->wormid),
       joinedPlayers.end()
     );
+    worms.erase(worms.find(request->wormid));
 
     response->set__wormid(WormConstants::INVALID_WORM_ID);
   }
