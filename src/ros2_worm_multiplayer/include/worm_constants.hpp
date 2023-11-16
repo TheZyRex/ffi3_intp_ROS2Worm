@@ -27,6 +27,7 @@ namespace WormConstants
 
   /* Invalid WormId to check for in join requests. */
   constexpr const int INVALID_WORM_ID = -1;
+  constexpr const int INVALID_GAME_ID = -1;
 
   /* Enumeration for characters to be displayed on the board */
   typedef enum WormCharacters {
