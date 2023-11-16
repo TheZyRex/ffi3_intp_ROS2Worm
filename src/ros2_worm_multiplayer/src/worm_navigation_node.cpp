@@ -367,5 +367,7 @@ int main(int argc, char** argv)
 
 	rclcpp::shutdown();
 
+	cleanupCursesApp();
+
 	return 0;
 }
