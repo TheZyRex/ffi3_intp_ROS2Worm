@@ -15,7 +15,7 @@ namespace WormConstants
   constexpr std::chrono::milliseconds TICK_TIME{100};
   constexpr std::chrono::milliseconds RESPONSE_TIMEOUT{1000};
   constexpr const int GRID_MESSAGE_QUEUE_LENGTH = 10;
-  constexpr const int FOOD_SPAWN_CHANCE_PERCENTAGE = 10;  // Chance a food item will spawn in a given tick
+  constexpr const int FOOD_SPAWN_CHANCE_PERCENTAGE = 2;  // Chance a food item will spawn in a given tick
 
   /* Size of board */
   constexpr const int BOARD_HEIGHT = 40;
