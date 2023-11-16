@@ -10,7 +10,6 @@ ENV SHELL [ "/bin/bash" ]
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
     #
-    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
     && apt-get update \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
@@ -19,10 +18,8 @@ RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y python3-pip python3-rosdep python3-colcon-common-extensions libncurses5-dev libncursesw5-dev
 
 # ********************************************************
-# * Anything else you want to do like clean up goes here *
-# ********************************************************
 
-# [Optional] Set the default user. Omit if you want to keep the default as root.
+# All following actions will be executed as USERNAME
 USER $USERNAME
 
 WORKDIR /home/$USERNAME

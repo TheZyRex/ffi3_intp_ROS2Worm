@@ -27,3 +27,10 @@ subscribes to the following topics:
 - PlayerInput  -- using Message Type: ros2_worm_multiplayer::msg::PlayerInput  
 
 Will respond to a Client, giving them their wormid -- using Interface: ros2_worm_multiplayer::srv::JoinServer
+
+# dockerized ROS2 Application
+docker image available from: hub.docker.com
+
+image name: thezyrex/ros2_worm_multiplayer:latest
+
+docker compose file is included in this repository and can be found in ./docker-image
