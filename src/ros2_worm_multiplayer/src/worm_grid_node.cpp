@@ -48,6 +48,18 @@ bool randomChance(int percentage) {
 }
 
 // ############################################################################
+// GAME EXIT EXCEPTION CLASS DECLARATION
+// ############################################################################
+
+class GameExitException : public std::exception {
+  public:
+    char* what() {
+      return "Exiting game.";
+    }
+};
+
+
+// ############################################################################
 // GRID NODE CLASS DECLARATION
 // ############################################################################
 
@@ -330,13 +342,26 @@ void WormGridNode::runGame() {
   if (randomChance(WormConstants::FOOD_SPAWN_CHANCE_PERCENTAGE)) {
     generateFood();
   }
+
+  if (joinedPlayers.size() == 1) {
+    if (worms[joinedPlayers.at(0)].positions.size() >= WormConstants::MIN_LENGTH_WIN_CONDITION) {
+      currentGameState = GameState::ENDED;
+    }
+  } else if (joinedPlayers.size() == 0) {
+    currentGameState = GameState::ENDED;
+  }
 }
 
 /**
  * @brief End the game and stop the grid node.
 */
 void WormGridNode::endGame() {
+  // let players exit
+  if (joinedPlayers.size() > 0) {
+    return;
+  }
 
+  throw GameExitException();
 }
 
 /**
@@ -499,17 +524,23 @@ void WormGridNode::handleJoin(
     RCLCPP_INFO(this->get_logger(), "Player joined. Given ID: %d", newWormId);
     response->set__wormid(newWormId);
     joinedPlayers.push_back(newWormId);
+    return;
 
   // Handle disconnecting
   } else if (request->srv_request == WormConstants::ServiceRequests::SRV_DISCONNECT) {
     RCLCPP_INFO(this->get_logger(), "Player %d left.", request->wormid);
     
-    joinedPlayers.erase(
-      std::remove(joinedPlayers.begin(), joinedPlayers.end(), request->wormid),
-      joinedPlayers.end()
-    );
-    worms.erase(worms.find(request->wormid));
+    while (std::find(joinedPlayers.begin(), joinedPlayers.end(), request->wormid) != joinedPlayers.end()) {
+      joinedPlayers.erase(
+        std::remove(joinedPlayers.begin(), joinedPlayers.end(), request->wormid),
+        joinedPlayers.end()
+      );
+    }
 
+    while (worms.find(request->wormid) != worms.end()) {
+      worms.erase(worms.find(request->wormid));
+    }
+    
     response->set__wormid(WormConstants::INVALID_WORM_ID);
   }
 }
@@ -528,10 +559,16 @@ int main(int argc, char ** argv)
 
   std::srand(std::time(nullptr));
 
-  rclcpp::executors::MultiThreadedExecutor executor;
+  rclcpp::executors::SingleThreadedExecutor executor;
   auto worm_grid_node = std::make_shared<WormGridNode>();
   executor.add_node(worm_grid_node);
-  executor.spin();
+  try {
+    executor.spin();
+  }
+  catch(const GameExitException& e)
+  {
+    RCLCPP_INFO(rclcpp::Node("EXIT").get_logger(), "Exiting game.");
+  }
   
   rclcpp::shutdown();
   
