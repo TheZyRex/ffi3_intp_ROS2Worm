@@ -104,6 +104,7 @@ class WormGridNode : public rclcpp::Node {
     // methods to implement specific gameplay functions
     void generateLevel();
     void generateNewWorm(int32_t wormId);
+    void generateFood();
 
     // callback methods for publishing
     void GameIdPublishCallback();
@@ -299,14 +300,17 @@ void WormGridNode::runGame() {
 
       if (posIndex == worm.headIndex) {
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_HEAD;
-        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = COLOR_WHITE;
+        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = WormConstants::WormColors::COLOR_HEAD;
       } else {
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_BODY;
-        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = COLOR_WHITE;
+        Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = WormConstants::WormColors::COLOR_BODY;
       }
     }
   }
 
+  if (randomChance(WormConstants::FOOD_SPAWN_CHANCE_PERCENTAGE)) {
+    generateFood();
+  }
 }
 
 /**
@@ -323,34 +327,23 @@ void WormGridNode::generateLevel() {
   // put barriers all around the board
   for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
     // top of board
-    Board.board.at(0).row.at(x).color = COLOR_WHITE;
+    Board.board.at(0).row.at(x).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(0).row.at(x).zeichen = WormConstants::WormCharacters::BARRIER;
 
     // bottom of board
-    Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).color = COLOR_WHITE;
+    Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).zeichen = WormConstants::WormCharacters::BARRIER;
   }
 
   for (int y = 1; y < WormConstants::BOARD_HEIGHT - 1; y++) {
     // left side of board
-    Board.board.at(y).row.at(0).color = COLOR_WHITE;
+    Board.board.at(y).row.at(0).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(y).row.at(0).zeichen = WormConstants::WormCharacters::BARRIER;
     
     // right side of board
-    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).color = COLOR_WHITE;
+    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).zeichen = WormConstants::WormCharacters::BARRIER;
   }
-
-  // food for testing
-  Board.board.at(10).row.at(10).color = COLOR_WHITE;
-  Board.board.at(10).row.at(10).zeichen = WormConstants::WormCharacters::FOOD_1;
-
-  Board.board.at(10).row.at(20).color = COLOR_WHITE;
-  Board.board.at(10).row.at(20).zeichen = WormConstants::WormCharacters::FOOD_2;
-
-  Board.board.at(10).row.at(30).color = COLOR_WHITE;
-  Board.board.at(10).row.at(30).zeichen = WormConstants::WormCharacters::FOOD_3;
-
 }
 
 /**
@@ -374,6 +367,35 @@ void WormGridNode::generateNewWorm(int32_t wormId) {
 
   currWorm.positions = positions;
   worms.insert(std::make_pair(wormId, currWorm));
+}
+
+/**
+ * @brief Put food at an unpopulated spot on the board.
+*/
+void WormGridNode::generateFood() {
+  int x = rand() % WormConstants::BOARD_LENGTH;
+  int y = rand() % WormConstants::BOARD_HEIGHT;
+
+  while (Board.board.at(y).row.at(x).zeichen != WormConstants::EMPTY) {
+    x = rand() % WormConstants::BOARD_LENGTH;
+    y = rand() % WormConstants::BOARD_HEIGHT;
+  }
+
+  int foodType = rand() % 3;
+  switch (foodType) {
+  case 0:
+    Board.board.at(y).row.at(x).zeichen = WormConstants::WormCharacters::FOOD_1;
+    Board.board.at(y).row.at(x).color = WormConstants::WormColors::COLOR_FOOD_1;
+    break;
+  case 1:
+    Board.board.at(y).row.at(x).zeichen = WormConstants::WormCharacters::FOOD_2;
+    Board.board.at(y).row.at(x).color = WormConstants::WormColors::COLOR_FOOD_2;
+    break;
+  case 2:
+    Board.board.at(y).row.at(x).zeichen = WormConstants::WormCharacters::FOOD_3;
+    Board.board.at(y).row.at(x).color = WormConstants::WormColors::COLOR_FOOD_3;
+    break;
+  }
 }
 
 /**

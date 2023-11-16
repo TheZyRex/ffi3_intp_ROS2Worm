@@ -5,6 +5,10 @@
 
 #include <chrono>
 
+extern "C" {
+#include <curses.h>
+}
+
 /* Namespace for constants used in this project */
 namespace WormConstants 
 {
@@ -40,6 +44,18 @@ namespace WormConstants
 
     EMPTY = ' '
   } WormCharacters;
+
+  /* Color palette for characters to be displayed on the board */
+  typedef enum WormColors {
+    COLOR_HEAD = COLOR_GREEN,
+    COLOR_BODY = COLOR_GREEN,
+    COLOR_BARRIER = COLOR_RED,
+    COLOR_FOOD_1 = COLOR_YELLOW,
+    COLOR_FOOD_2 = COLOR_MAGENTA,
+    COLOR_FOOD_3 = COLOR_CYAN,
+
+    COLOR_EMPTY = COLOR_BLACK
+  } WormColors;
 }
 
 /* Namespace for topics used in this project */
