@@ -34,6 +34,7 @@ typedef struct {
 } Worm;
 
 static const std::pair<int, int> INVALID_POS = std::make_pair(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+static const char TEMP_WORM_CHARACTER = '@';
 
 /**
  * @brief Return true with the given probability in percent.
@@ -232,7 +233,7 @@ void WormGridNode::runGame() {
         Board.board.at(y).row.at(x).zeichen == WormConstants::WormCharacters::WORM_BODY
         || Board.board.at(y).row.at(x).zeichen == WormConstants::WormCharacters::WORM_HEAD
       ) {
-        Board.board.at(y).row.at(x).zeichen = WormConstants::WormCharacters::EMPTY;
+        Board.board.at(y).row.at(x).zeichen = TEMP_WORM_CHARACTER;
         Board.board.at(y).row.at(x).color = COLOR_BLACK;
       }
     }
@@ -284,6 +285,13 @@ void WormGridNode::runGame() {
       worm.positions.at(worm.headIndex) = headPos;
       break;
 
+    case TEMP_WORM_CHARACTER:
+      if (worm.currMove != std::make_pair(0, 0)) {
+        joinedPlayers.erase(std::remove(joinedPlayers.begin(), joinedPlayers.end(), id));
+        worms.erase(id);
+      }
+      break;
+
     default:
       joinedPlayers.erase(std::remove(joinedPlayers.begin(), joinedPlayers.end(), id));
       worms.erase(id);
@@ -304,6 +312,17 @@ void WormGridNode::runGame() {
       } else {
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_BODY;
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = WormConstants::WormColors::COLOR_BODY;
+      }
+    }
+  }
+
+  // remove temp elements on the board
+  for (int y = 0; y < WormConstants::BOARD_HEIGHT; y++) {
+    for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
+      if (
+        Board.board.at(y).row.at(x).zeichen == TEMP_WORM_CHARACTER
+      ) {
+        Board.board.at(y).row.at(x).zeichen = WormConstants::WormCharacters::EMPTY;
       }
     }
   }
