@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <ctime>
 #include <chrono>
-#include <queue>
+#include <limits>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32.hpp"
@@ -24,7 +24,7 @@ extern "C" {
 }
 
 // ############################################################################
-// WORM STRUCT
+// DEFINITIONS IN FILE SCOPE
 // ############################################################################
 
 typedef struct {
@@ -33,6 +33,7 @@ typedef struct {
   std::pair<int, int> currMove;
 } Worm;
 
+static const std::pair<int, int> INVALID_POS = std::make_pair(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
 
 // ############################################################################
 // GRID NODE CLASS DECLARATION
@@ -230,20 +231,61 @@ void WormGridNode::runGame() {
   for (auto& [id, worm]: worms) {
     std::pair<int, int> headPos = worm.positions.at(worm.headIndex);
 
-    worm.headIndex++;
-    if (worm.headIndex >= worm.positions.size()) {
-      worm.headIndex = 0;
-    }
-
     headPos.first += worm.currMove.first;
     headPos.second += worm.currMove.second;
 
-    worm.positions.at(worm.headIndex) = headPos;    
+    // determine if and what the worm hits
+    switch (Board.board.at(headPos.second).row.at(headPos.first).zeichen)
+    {
+    case WormConstants::WormCharacters::EMPTY:
+      worm.headIndex++;
+      if (worm.headIndex >= worm.positions.size()) {
+        worm.headIndex = 0;
+      }
+      worm.positions.at(worm.headIndex) = headPos;
+      break;
+    
+    case WormConstants::WormCharacters::FOOD_1:
+      worm.positions.resize(worm.positions.size() + 1, INVALID_POS);
+      worm.headIndex++;
+      if (worm.headIndex >= worm.positions.size()) {
+        worm.headIndex = 0;
+      }
+      worm.positions.at(worm.headIndex) = headPos;
+      break;
+
+    case WormConstants::WormCharacters::FOOD_2:
+      worm.positions.resize(worm.positions.size() + 2, INVALID_POS);
+      worm.headIndex++;
+      if (worm.headIndex >= worm.positions.size()) {
+        worm.headIndex = 0;
+      }
+      worm.positions.at(worm.headIndex) = headPos;
+      break;
+
+    case WormConstants::WormCharacters::FOOD_3:
+      worm.positions.resize(worm.positions.size() + 3, INVALID_POS);
+            worm.headIndex++;
+      if (worm.headIndex >= worm.positions.size()) {
+        worm.headIndex = 0;
+      }
+      worm.positions.at(worm.headIndex) = headPos;
+      break;
+
+    default:
+      joinedPlayers.erase(std::remove(joinedPlayers.begin(), joinedPlayers.end(), id));
+      worms.erase(id);
+      break;
+    }    
   }
 
   // redraw changed worms
   for (auto [id, worm]: worms) {
     for (int posIndex = 0; posIndex < worm.positions.size(); posIndex++) {
+      if (worm.positions.at(posIndex) == INVALID_POS) {
+        continue;
+      }
+
       if (posIndex == worm.headIndex) {
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_HEAD;
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = COLOR_WHITE;
@@ -287,6 +329,17 @@ void WormGridNode::generateLevel() {
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).color = COLOR_WHITE;
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).zeichen = WormConstants::WormCharacters::BARRIER;
   }
+
+  // food for testing
+  Board.board.at(10).row.at(10).color = COLOR_WHITE;
+  Board.board.at(10).row.at(10).zeichen = WormConstants::WormCharacters::FOOD_1;
+
+  Board.board.at(10).row.at(20).color = COLOR_WHITE;
+  Board.board.at(10).row.at(20).zeichen = WormConstants::WormCharacters::FOOD_2;
+
+  Board.board.at(10).row.at(30).color = COLOR_WHITE;
+  Board.board.at(10).row.at(30).zeichen = WormConstants::WormCharacters::FOOD_3;
+
 }
 
 /**
@@ -335,6 +388,11 @@ void WormGridNode::BoardInfoPublishCallback() {
 */
 void WormGridNode::PlayerInputCallback(const ros2_worm_multiplayer::msg::PlayerInput input) {
   RCLCPP_INFO(this->get_logger(), "Player %d: Received input (%d/%d).", input.wormid, input.dir.dx, input.dir.dy);
+  // check if player is actuall in game
+  if (worms.find(input.wormid) == worms.end()) {
+    return;
+  }
+
   worms[input.wormid].currMove.first = input.dir.dx;
   worms[input.wormid].currMove.second = input.dir.dy;
 }
