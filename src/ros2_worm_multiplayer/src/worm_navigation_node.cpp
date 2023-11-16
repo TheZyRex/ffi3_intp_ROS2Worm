@@ -62,6 +62,9 @@ class Navigation : public rclcpp::Node
 		int cur_game_id;
 
 		/* */
+		int cur_wormid;
+
+		/* */
 		enum gamestates cur_gamestate;
 
 		/* Msg type that includes direction that a specifc worm goes */
@@ -120,9 +123,6 @@ Navigation::Navigation()
 */
 void Navigation::join_gameserver()
 {
-	/* gameserver_selection blocks until a game was selected */
-	//this->gameserver_selection();
-
 	if (this->cur_game_id > -1)
 	{
 		/* Create the actual join request */
@@ -160,8 +160,10 @@ void Navigation::join_gameserver()
 		refresh();
 
 		/* Store wormid for this node until the end of the game */
-		this->pInput.wormid = response->wormid;
+		this->cur_wormid = response->wormid;
+		this->pInput.wormid = this->cur_wormid;
 
+		/* Change the gamestate to INGAME */
 		this->cur_gamestate = INGAME;
 	}
 }
@@ -172,9 +174,29 @@ void Navigation::join_gameserver()
 */
 void Navigation::quit_gameserver()
 {
-	/* TODO Service Request to quit from gameserver */
-	cleanupCursesApp();
-	rclcpp::shutdown();
+	if (this->cur_wormid != WormConstants::INVALID_WORM_ID)
+	{
+  	auto quit_request = std::make_shared<ros2_worm_multiplayer::srv::JoinServer::Request>();
+  	quit_request->gameid = this->cur_game_id;
+  	quit_request->wormid = this->pInput.wormid;
+  	quit_request->srv_request = WormConstants::SRV_DISCONNECT;
+
+  	auto future_response = this->client_->async_send_request(quit_request);
+
+  	while (future_response.wait_for(WormConstants::RESPONSE_TIMEOUT) != std::future_status::ready)
+  	{
+			/* Disconnecting from gameserver... */
+  	}
+
+		auto response = future_response.get();
+
+		this->cur_wormid = response->wormid;
+		this->cur_game_id = WormConstants::INVALID_GAME_ID;
+		this->game_ids_.clear();
+
+  	cleanupCursesApp();
+  	rclcpp::shutdown();
+	}
 }
 
 
@@ -183,7 +205,6 @@ void Navigation::quit_gameserver()
 */
 void Navigation::gamestart_callback(const std_msgs::msg::Int32& msg)
 {
-	/* collect all gameids in a vector list */
 	this->add_gameid_to_vector(msg);
 }
 
@@ -277,7 +298,13 @@ void Navigation::user_input_loop()
 
 	/* TODO Game Menu */
 	clear();
-	printw("Nutze Pfeiltasten zum Navigieren und q um das game zu beenden");
+	mvprintw(1, 1, "Worm Game Instructions");
+	mvprintw(3, 1, "Use the Arrow Keys to Navigate:");
+	mvprintw(5, 1, "UP    : Move Up");
+	mvprintw(6, 1, "DOWN  : Move Down");
+	mvprintw(7, 1, "LEFT  : Move Left");
+	mvprintw(8, 1, "RIGHT : Move Right");
+	mvprintw(10, 1, "Press Q to Quit the Game");
 	refresh();
 
 	if ((key = getch()) != ERR)
@@ -330,9 +357,9 @@ int main(int argc, char** argv)
 {
 	rclcpp::init(argc, argv);
 
-	/* ::spin is used to enter a loop that keeps the node running */
 	auto navigation_node = std::make_shared<Navigation>();
 
+	/* Use a multithreaded executor to run more threads at once */
 	rclcpp::executors::MultiThreadedExecutor executor;
 	executor.add_node(navigation_node);
 
