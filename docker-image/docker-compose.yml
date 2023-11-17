@@ -5,6 +5,7 @@ services:
     container_name: worm_server
     user: "1000:1000"
     network_mode: host
+    restart: always
     environment:
       - ROS_DOMAIN_ID=24
       - ROS_LOCALHOST_ONLY=0
