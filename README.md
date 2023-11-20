@@ -13,6 +13,10 @@ Will make a request to a server to join the game -- using Interface: ros2_worm_m
 
 ## Display Node(s)
 
+Commandline Arguments:
+- wormID (only cpp version)
+-> e.g. ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=549528476
+
 publishes to the following topics:
 
 - None
