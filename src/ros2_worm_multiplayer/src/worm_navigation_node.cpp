@@ -1,14 +1,22 @@
+/**
+ * Author: jop6462
+ * Last Change: 20.11.2023
+*/
+
+
 #include <cstdio>
 #include <curses.h>
 #include <cinttypes>
 #include <string>
 #include <iostream>
 #include <vector>
+#include <csignal>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include "ros2_worm_multiplayer/msg/player_input.hpp"
 #include "ros2_worm_multiplayer/srv/join_server.hpp"
 #include "worm_constants.hpp"
+
 
 extern "C" {
 #include "prep.h"
@@ -16,12 +24,12 @@ extern "C" {
 }
 
 /**
- * @brief
+ * @brief Custom Node Class for the 
 */
-class Navigation : public rclcpp::Node
+class NavigationNode : public rclcpp::Node
 {
 	public:
-		Navigation();
+		NavigationNode();
 
 	private:
 
@@ -31,7 +39,8 @@ class Navigation : public rclcpp::Node
 			PRELOBBY,
 			LOBBY,
 			INGAME,
-			POSTGAME
+			POSTGAME,
+			QUIT
 		};
 
 		/* */
@@ -47,14 +56,15 @@ class Navigation : public rclcpp::Node
 		void quit_gameserver();
 
 		/* */
+		void shutdown_node();
+
+		/* */
 		void gamestart_callback(const std_msgs::msg::Int32& msg);
 
 		/* */
 		void timer_callback();
 		
 		/* helper methods */
-		void draw_gameserver_selection_lobby();
-		void draw_game_instructions();
 		void add_gameid_to_vector(const std_msgs::msg::Int32& msg);
 
 		/* Game Server IDs */
@@ -91,7 +101,7 @@ class Navigation : public rclcpp::Node
 /**
  * @brief Initialize navigation node 
 */
-Navigation::Navigation()
+NavigationNode::NavigationNode()
 : Node("navigation_node"), cur_game_id{-1}, cur_gamestate{PRELOBBY}
 {
 	/* NCurses Init */
@@ -104,7 +114,7 @@ Navigation::Navigation()
 	rclcpp::SubscriptionOptions sub_options;
 	sub_options.callback_group = this->sub_cb_group_;
 	this->gamestart_sub_ = this->create_subscription<std_msgs::msg::Int32>(
-		WormTopics::GameStart, 10, std::bind(&Navigation::gamestart_callback, this, std::placeholders::_1), sub_options);
+		WormTopics::GameStart, 10, std::bind(&NavigationNode::gamestart_callback, this, std::placeholders::_1), sub_options);
 
 	/* Create Client for join request */
 	this->client_ = this->create_client<ros2_worm_multiplayer::srv::JoinServer>(WormServices::JoinService,
@@ -114,17 +124,20 @@ Navigation::Navigation()
 	this->pInput_pub_ = this->create_publisher<ros2_worm_multiplayer::msg::PlayerInput>(WormTopics::PlayerInput, rclcpp::QoS(10));
 
 	/* Create a timer to check for keyboard input every 100ms */
-	this->timer_ = create_wall_timer(WormConstants::TICK_TIME, std::bind(&Navigation::timer_callback, this));
+	this->timer_ = create_wall_timer(WormConstants::TICK_TIME, std::bind(&NavigationNode::timer_callback, this));
 }
 
 
 /**
- * 
+ * @brief Requests a Server to join their game
 */
-void Navigation::join_gameserver()
+void NavigationNode::join_gameserver()
 {
 	if (this->cur_game_id > -1)
 	{
+		int retry_count {0};
+		bool timedout {false};
+
 		/* Create the actual join request */
 		auto join_request = std::make_shared<ros2_worm_multiplayer::srv::JoinServer::Request>();
 		join_request->gameid = this->cur_game_id;
@@ -144,38 +157,64 @@ void Navigation::join_gameserver()
 		/* sending actual request to the service */
 		auto future_response = this->client_->async_send_request(join_request);
 
+		/* Wait for server reply */
 		while (future_response.wait_for(WormConstants::RESPONSE_TIMEOUT) != std::future_status::ready)
 		{
 		  attron(COLOR_PAIR(1));
-		  printw("We were not able to join this server");
+		  printw("Server not responding... \n");
 		  attroff(COLOR_PAIR(1));
 		  refresh();
+
+			/* Check for recurring timeouts */
+			if ((retry_count += 1) > WormConstants::RETRIES_UNTIL_TIMEOUT)
+			{
+				clear();
+				printw("We were not able to join this server...\n");
+				printw("Going back to game selection.");
+				refresh();
+
+				this->game_ids_.clear();
+				this->cur_gamestate = PRELOBBY;
+				timedout = true;
+
+				/* Display Info for 1s */
+				rclcpp::sleep_for(std::chrono::milliseconds(2000));
+
+				break;
+			}
 		}
 
-		auto response = future_response.get();
+		/* Only proceed if no timeout occured */
+		if (!timedout)
+		{
+		  auto response = future_response.get();
 
-		attron(COLOR_PAIR(1));
-		printw("Successfully joined server: %d\n playing as wormid: %d\n",this->cur_game_id, response->wormid);
-		attroff(COLOR_PAIR(1));
-		refresh();
+		  attron(COLOR_PAIR(1));
+		  printw("Successfully joined server: %d\n playing as wormid: %d\n",this->cur_game_id, response->wormid);
+		  attroff(COLOR_PAIR(1));
+		  refresh();
 
-		/* Store wormid for this node until the end of the game */
-		this->cur_wormid = response->wormid;
-		this->pInput.wormid = this->cur_wormid;
+		  /* Store wormid for this node until the end of the game */
+		  this->cur_wormid = response->wormid;
+		  this->pInput.wormid = this->cur_wormid;
 
-		/* Change the gamestate to INGAME */
-		this->cur_gamestate = INGAME;
+		  /* Change the gamestate to INGAME */
+		  this->cur_gamestate = INGAME;
+		}
 	}
 }
 
 
 /**
- * 
+ * @brief Requests to quit the server and goes back to gameselection state
 */
-void Navigation::quit_gameserver()
+void NavigationNode::quit_gameserver()
 {
 	if (this->cur_wormid != WormConstants::INVALID_WORM_ID)
 	{
+		int retry_count {0};
+		bool timedout {false};
+
   	auto quit_request = std::make_shared<ros2_worm_multiplayer::srv::JoinServer::Request>();
   	quit_request->gameid = this->cur_game_id;
   	quit_request->wormid = this->pInput.wormid;
@@ -185,34 +224,54 @@ void Navigation::quit_gameserver()
 
   	while (future_response.wait_for(WormConstants::RESPONSE_TIMEOUT) != std::future_status::ready)
   	{
-			/* Disconnecting from gameserver... */
+			if ((retry_count += 1) > WormConstants::RETRIES_UNTIL_TIMEOUT) { timedout = true; break; }
   	}
 
-		auto response = future_response.get();
+		if (timedout)
+		{
+			this->cur_wormid = WormConstants::INVALID_WORM_ID;
+			this->cur_game_id = WormConstants::INVALID_GAME_ID;
+			this->game_ids_.clear();
+		}
+		else
+		{
+		  auto response = future_response.get();
 
-		this->cur_wormid = response->wormid;
-		this->cur_game_id = WormConstants::INVALID_GAME_ID;
-		this->game_ids_.clear();
+		  this->cur_wormid = response->wormid;
+		  this->cur_game_id = WormConstants::INVALID_GAME_ID;
+		  this->game_ids_.clear();
+		}
 
-  	cleanupCursesApp();
-  	rclcpp::shutdown();
+		this->cur_gamestate = PRELOBBY;
+
+		clear();
+		refresh();
 	}
 }
 
 
 /**
- * @brief
+ * @brief Shutdown and cleanup
 */
-void Navigation::gamestart_callback(const std_msgs::msg::Int32& msg)
+void NavigationNode::shutdown_node()
+{
+	cleanupCursesApp();
+	rclcpp::shutdown();
+}
+
+/**
+ * @brief Callback for the subscriber
+*/
+void NavigationNode::gamestart_callback(const std_msgs::msg::Int32& msg)
 {
 	this->add_gameid_to_vector(msg);
 }
 
 
 /**
- * @brief 
+ * @brief Displays a small lobby with available servers in the network
 */
-void Navigation::gameserver_selection()
+void NavigationNode::gameserver_selection()
 {
 	char input;
 
@@ -227,10 +286,15 @@ void Navigation::gameserver_selection()
 	   	printw("%d - Game ID: %d\n", i, this->game_ids_.at(i));
 	  }
 
-	  move(getmaxy(stdscr) - 1, 0);
+		/* Move cursor to the bottom left */
+	  move(getmaxy(stdscr) - 2, 0);
 	  printw("Chose a game to join %d - %ld: ", 0, this->game_ids_.size() - 1);
+	  move(getmaxy(stdscr) - 1, 0);
+	  printw("Press 'q' to quit...");
 
-	  if ((input = getch()) != ERR && isdigit(input))
+		/* Get user inputs in a non-blocking manner */
+		input = getch();
+	  if (input != ERR && isdigit(input))
 	  {
 	  	input = std::atoi(&input);
 	  	if (input < this->game_ids_.size())
@@ -240,6 +304,33 @@ void Navigation::gameserver_selection()
 				this->cur_gamestate = LOBBY;
 	  	}
 	  }
+		else if (input == 'q') /* q to quit */
+		{
+			this->cur_gamestate = QUIT;
+		}
+
+		attroff(COLOR_PAIR(1));
+		refresh();
+	}
+	else /* if no gameservers are available, display a waiting message */
+	{
+		int mid_y = getmaxy(stdscr) / 2;
+		int mid_x = getmaxx(stdscr) / 2;
+		clear();
+
+	  move(mid_y, mid_x);
+
+		attron(COLOR_PAIR(1));
+		printw("Looking for Gameservers...\n");
+
+		move(mid_y + 1, mid_x);
+	  printw("Press 'q' to quit...");
+
+		input = getch();
+		if (input == 'q')
+		{
+			this->cur_gamestate = QUIT;
+		}
 
 		attroff(COLOR_PAIR(1));
 		refresh();
@@ -252,7 +343,7 @@ void Navigation::gameserver_selection()
 /**
  * @brief
 */
-void Navigation::timer_callback()
+void NavigationNode::timer_callback()
 {
 	switch (this->cur_gamestate)
 	{
@@ -271,6 +362,10 @@ void Navigation::timer_callback()
 		case POSTGAME:
 			this->quit_gameserver();
 			break;
+
+		case QUIT:
+			this->shutdown_node();
+			break;
 	}
 }
 
@@ -278,7 +373,7 @@ void Navigation::timer_callback()
 /**
  * @brief Adds a game id to the list of available game servers if it doesnt exist already
 */
-void Navigation::add_gameid_to_vector(const std_msgs::msg::Int32& msg)
+void NavigationNode::add_gameid_to_vector(const std_msgs::msg::Int32& msg)
 {
 	if (std::find(this->game_ids_.begin(), this->game_ids_.end(), msg.data) == this->game_ids_.end())
 	{
@@ -290,7 +385,7 @@ void Navigation::add_gameid_to_vector(const std_msgs::msg::Int32& msg)
 /**
  * @brief
 */
-void Navigation::user_input_loop()
+void NavigationNode::user_input_loop()
 {
 	int key;
 	bool dirty = false;
@@ -352,12 +447,24 @@ void Navigation::user_input_loop()
 }
 
 
+/**
+ * @brief Catch SIGINT event generated by CTRL+C to cleanup nCurses and shutdown
+ * the node correctly
+*/
+void signalHandler(int signum)
+{
+	cleanupCursesApp();
+	rclcpp::shutdown();
+	exit(signum);
+}
+
 /* */
 int main(int argc, char** argv)
 {
+	signal(SIGINT, signalHandler);
 	rclcpp::init(argc, argv);
 
-	auto navigation_node = std::make_shared<Navigation>();
+	auto navigation_node = std::make_shared<NavigationNode>();
 
 	/* Use a multithreaded executor to run more threads at once */
 	rclcpp::executors::MultiThreadedExecutor executor;
@@ -366,8 +473,6 @@ int main(int argc, char** argv)
 	executor.spin();
 
 	rclcpp::shutdown();
-
-	cleanupCursesApp();
 
 	return 0;
 }

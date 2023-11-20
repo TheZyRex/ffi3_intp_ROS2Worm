@@ -14,6 +14,7 @@ namespace WormConstants
 {
   constexpr std::chrono::milliseconds TICK_TIME{100};
   constexpr std::chrono::milliseconds RESPONSE_TIMEOUT{1000};
+  constexpr const int RETRIES_UNTIL_TIMEOUT{5};
   constexpr const int GRID_MESSAGE_QUEUE_LENGTH = 10;
   constexpr const int FOOD_SPAWN_CHANCE_PERCENTAGE = 2;  // Chance a food item will spawn in a given tick
   constexpr const int MIN_LENGTH_WIN_CONDITION = 50;
