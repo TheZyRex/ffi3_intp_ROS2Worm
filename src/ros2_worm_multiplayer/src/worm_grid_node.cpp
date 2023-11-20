@@ -195,6 +195,7 @@ WormGridNode::WormGridNode() : Node("worm_grid_node") {
     for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
       currentElement.set__color(COLOR_BLACK);
       currentElement.set__zeichen(WormConstants::WormCharacters::EMPTY);
+      currentElement.set__worm_id(WormConstants::INVALID_WORM_ID);
       currentRow.push_back(currentElement);
     }
     boardVector.push_back(ros2_worm_multiplayer::msg::Row().set__row(currentRow));
@@ -241,12 +242,10 @@ void WormGridNode::runGame() {
   // remove all worms
   for (int y = 0; y < WormConstants::BOARD_HEIGHT; y++) {
     for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
-      if (
-        Board.board.at(y).row.at(x).zeichen == WormConstants::WormCharacters::WORM_BODY
-        || Board.board.at(y).row.at(x).zeichen == WormConstants::WormCharacters::WORM_HEAD
-      ) {
+      if (Board.board.at(y).row.at(x).worm_id != WormConstants::INVALID_WORM_ID) {
         Board.board.at(y).row.at(x).zeichen = TEMP_WORM_CHARACTER;
         Board.board.at(y).row.at(x).color = COLOR_BLACK;
+        Board.board.at(y).row.at(x).worm_id = WormConstants::INVALID_WORM_ID;
       }
     }
   }
@@ -325,6 +324,7 @@ void WormGridNode::runGame() {
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).zeichen = WormConstants::WormCharacters::WORM_BODY;
         Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).color = WormConstants::WormColors::COLOR_BODY;
       }
+      Board.board.at(worm.positions.at(posIndex).second).row.at(worm.positions.at(posIndex).first).worm_id = id;
     }
   }
 
@@ -373,20 +373,24 @@ void WormGridNode::generateLevel() {
     // top of board
     Board.board.at(0).row.at(x).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(0).row.at(x).zeichen = WormConstants::WormCharacters::BARRIER;
+    Board.board.at(0).row.at(x).worm_id = WormConstants::INVALID_WORM_ID;
 
     // bottom of board
     Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).zeichen = WormConstants::WormCharacters::BARRIER;
+    Board.board.at(WormConstants::BOARD_HEIGHT - 1).row.at(x).worm_id = WormConstants::INVALID_WORM_ID;
   }
 
   for (int y = 1; y < WormConstants::BOARD_HEIGHT - 1; y++) {
     // left side of board
     Board.board.at(y).row.at(0).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(y).row.at(0).zeichen = WormConstants::WormCharacters::BARRIER;
+    Board.board.at(y).row.at(0).worm_id = WormConstants::INVALID_WORM_ID;
     
     // right side of board
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).color = WormConstants::WormColors::COLOR_BARRIER;
     Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).zeichen = WormConstants::WormCharacters::BARRIER;
+    Board.board.at(y).row.at(WormConstants::BOARD_LENGTH - 1).worm_id = WormConstants::INVALID_WORM_ID;
   }
 }
 
@@ -440,6 +444,7 @@ void WormGridNode::generateFood() {
     Board.board.at(y).row.at(x).color = WormConstants::WormColors::COLOR_FOOD_3;
     break;
   }
+  Board.board.at(y).row.at(x).worm_id = WormConstants::INVALID_WORM_ID;
 }
 
 /**
