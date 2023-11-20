@@ -6,7 +6,7 @@
 #include <curses.h>
 
 
-
+#define WORM_ID_PARAMETER wormid;
 
 using std::placeholders::_1;
 class WormDisplayNode : public rclcpp::Node
@@ -15,7 +15,12 @@ class WormDisplayNode : public rclcpp::Node
 
     WormDisplayNode() : Node("display_node")
     {
+      declare_parameter("wormID", WormConstants::INVALID_WORM_ID); // defaults to INVALID_WORM_ID
       subscription_ = this->create_subscription<ros2_worm_multiplayer::msg::Board>(WormTopics::BoardInfo, 10, std::bind(&WormDisplayNode::refreshD, this, _1));
+
+
+      get_parameter("wormID", observedWormID);
+
       startup();
     }
 
@@ -30,6 +35,7 @@ class WormDisplayNode : public rclcpp::Node
 
     int width, height;
     bool cursesInitialized = false;
+    int observedWormID = WormConstants::INVALID_WORM_ID;
 
     void startup();
     void initializeCursesApplication();
@@ -120,7 +126,14 @@ void WormDisplayNode::refreshD(const ros2_worm_multiplayer::msg::Board& msg)
       int xCentralizer = (COLS-width)/2;
       for(auto &element : row.row)
       {
-        place(y+yCentralizer, x+xCentralizer, element.zeichen, element.color);
+        int32_t color = element.color;
+
+        if(element.worm_id != WormConstants::INVALID_WORM_ID && element.worm_id == observedWormID)
+        {
+          color = COLOR_MAGENTA; //drawing selected worm in Magenta
+        }
+
+        place(y+yCentralizer, x+xCentralizer, element.zeichen, color);
         x++;
       }
       width = x;
