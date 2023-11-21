@@ -24,7 +24,7 @@ namespace WormConstants
   constexpr const int BOARD_LENGTH = 80;
 
   /* Constants concerning limits of the game*/
-  constexpr const int MAX_PLAYERS = 1;
+  constexpr const int MAX_PLAYERS = 4;
 
   typedef enum ServiceRequests {
     SRV_JOIN,
