@@ -198,6 +198,13 @@ void NavigationNode::join_gameserver()
 		  this->cur_wormid = response->wormid;
 		  this->pInput.wormid = this->cur_wormid;
 
+			std::ostringstream start_command;
+			start_command << "gnome-terminal --geometry=" << std::to_string(WormConstants::BOARD_LENGTH) << "x" << std::to_string(WormConstants::BOARD_HEIGHT) 
+										<< " -- bash -i -c 'ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=" << std::to_string(this->cur_wormid) << "'";
+
+			/* Start display node in separate terminal */
+    	system(start_command.str().c_str());
+
 		  /* Change the gamestate to INGAME */
 		  this->cur_gamestate = INGAME;
 		}
