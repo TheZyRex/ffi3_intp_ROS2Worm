@@ -572,9 +572,6 @@ int main(int argc, char ** argv)
   (void) argc;
   (void) argv;
   
-  getchar();
-  std::cout << "test" << std::endl;
-
   rclcpp::init(argc, argv);
 
   std::srand(std::time(nullptr));
