@@ -53,7 +53,7 @@ bool randomChance(int percentage) {
 
 class GameExitException : public std::exception {
   public:
-    char* what() {
+    const char* what() {
       return "Exiting game.";
     }
 };
@@ -239,6 +239,7 @@ void WormGridNode::runLobby() {
 */
 void WormGridNode::runGame() {
 
+
   // remove all worms
   for (int y = 0; y < WormConstants::BOARD_HEIGHT; y++) {
     for (int x = 0; x < WormConstants::BOARD_LENGTH; x++) {
@@ -252,7 +253,8 @@ void WormGridNode::runGame() {
 
   // process worm movement
   /* fix: we need to have references of id and worm instead of a local copy */
-  for (auto& [id, worm]: worms) {
+  for (auto it = worms.begin(); it != worms.end();) {
+    auto& [id, worm] = *it;
     std::pair<int, int> headPos = worm.positions.at(worm.headIndex);
 
     headPos.first += worm.currMove.first;
@@ -267,6 +269,7 @@ void WormGridNode::runGame() {
         worm.headIndex = 0;
       }
       worm.positions.at(worm.headIndex) = headPos;
+      ++it;
       break;
     
     case WormConstants::WormCharacters::FOOD_1:
@@ -276,6 +279,7 @@ void WormGridNode::runGame() {
         worm.headIndex = 0;
       }
       worm.positions.at(worm.headIndex) = headPos;
+      ++it;
       break;
 
     case WormConstants::WormCharacters::FOOD_2:
@@ -294,18 +298,26 @@ void WormGridNode::runGame() {
         worm.headIndex = 0;
       }
       worm.positions.at(worm.headIndex) = headPos;
+      ++it;
       break;
 
     case TEMP_WORM_CHARACTER:
       if (worm.currMove != std::make_pair(0, 0)) {
         joinedPlayers.erase(std::remove(joinedPlayers.begin(), joinedPlayers.end(), id));
-        worms.erase(id);
+        /* set the iterator to the next element after erasing */
+        it = worms.erase(it);
+      }
+      else
+      {
+        /* Move to next element in map */
+        ++it;
       }
       break;
 
     default:
       joinedPlayers.erase(std::remove(joinedPlayers.begin(), joinedPlayers.end(), id));
-      worms.erase(id);
+      /* set the iterator to the next element after erasing */
+      it = worms.erase(it);
       break;
     }    
   }
@@ -559,6 +571,9 @@ int main(int argc, char ** argv)
 {
   (void) argc;
   (void) argv;
+  
+  getchar();
+  std::cout << "test" << std::endl;
 
   rclcpp::init(argc, argv);
 
