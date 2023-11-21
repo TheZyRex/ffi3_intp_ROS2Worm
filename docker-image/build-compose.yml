@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  builder:
+    image: docker/buildx:latest
+    container_name: builder
+    command: >
+      sh -c "docker buildx create --bootstrap --use &&
+             docker buildx inspect --bootstrap"
+
+  myapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+        - linux/arm64
+    image: thezyrex/ros2_worm_multiplayer:latest
