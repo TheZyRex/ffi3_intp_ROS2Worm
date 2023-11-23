@@ -55,6 +55,10 @@ The Display Node(s) do not publish to any topics.
 
 The Grid Node is responsible for managing game grid-related functionality.
 
+### Command line Arguments
+- numPlayers: int
+-> e.g. ros2 run ros2_worm_multiplayer worm_grid_node --ros-args -p numPlayers:=1
+
 ### Publishes
 
 - **Topic:** `GameStart`
