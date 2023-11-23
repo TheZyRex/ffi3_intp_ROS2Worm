@@ -3,6 +3,7 @@ FROM ros:humble
 ARG USERNAME=ffi3
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+ARG ROS2_INSTALL_DIR="/opt/ros/humble/"
 
 ENV SHELL [ "/bin/bash" ]
 
@@ -25,10 +26,13 @@ WORKDIR /home/$USERNAME
 RUN git clone https://github.com/TheZyRex/ffi3_intp_ROS2Worm.git -b main
 WORKDIR /home/$USERNAME/ffi3_intp_ROS2Worm
 
-RUN sudo rosdep init \
-    && rosdep fix-permissions \ 
+RUN if [ ! -e /etc/ros/rosdep/sources.list.d/20-default.list ]; then sudo rosdep init; fi
+
+RUN rosdep fix-permissions \ 
 	&& rosdep update \
 	&& rosdep install -i --from-path src --rosdistro humble -y
+
+RUN /bin/bash -c "if [ -d /opt/ros/humble ]; then . /opt/ros/humble/setup.bash; colcon build; fi"
 
 COPY ros2_worm_entrypoint.sh /home/$USERNAME/.
 RUN sudo chown $USERNAME:$USERNAME /home/$USERNAME/ros2_worm_entrypoint.sh

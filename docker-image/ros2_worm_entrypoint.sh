@@ -22,8 +22,10 @@ if [ -d "$ROS2_INSTALL_DIR" ]; then
 			exit 1
 		}
 
+		echo "Buildind worm package - can take upto 2hrs... be patient"
+
 		# build the ros2 package
-		colcon build --cmake-target worm_grid_node || {
+		colcon build || {
 			echo "Error: build of ros2_worm_multiplayer failed"
 			exit 1
 		}
