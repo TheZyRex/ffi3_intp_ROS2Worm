@@ -1,7 +1,7 @@
 version: '3'
 services:
   ros2_worm_server:
-    image: thezyrex/ros2_worm_multiplayer:latest
+    image: thezyrex/ros2_worm_multiplayer:arm64
     container_name: worm_server
     user: "1000:1000"
     network_mode: host

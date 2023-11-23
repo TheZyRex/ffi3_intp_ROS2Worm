@@ -8,11 +8,22 @@ services:
       sh -c "docker buildx create --bootstrap --use &&
              docker buildx inspect --bootstrap"
 
-  myapp:
+  arm-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64
+    image: thezyrex/ros2_worm_multiplayer:arm64
+    depends_on:
+      - builder
+
+  amd64-build:
     build:
       context: .
       dockerfile: Dockerfile
       platforms:
         - linux/amd64
-        - linux/arm64
-    image: thezyrex/ros2_worm_multiplayer:latest
+    image: thezyrex/ros2_worm_multiplayer:amd64
+    depends_on:
+      - builder

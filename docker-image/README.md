@@ -1,5 +1,4 @@
 sudo docker compose -f build-compose.yml build
-
 sudo docker compose -f build-compose.yml push
 
 to check supported platforms:

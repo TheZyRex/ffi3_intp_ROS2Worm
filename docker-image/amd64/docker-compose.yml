@@ -1,0 +1,24 @@
+version: '3'
+services:
+  ros2_worm_server:
+    image: thezyrex/ros2_worm_multiplayer:amd64
+    container_name: worm_server
+    user: "1000:1000"
+    network_mode: host
+    restart: always
+    environment:
+      - ROS_DOMAIN_ID=24
+      - ROS_LOCALHOST_ONLY=0
+      - ROS_DISTRO=humble
+      - ROS_VERSION=2
+    volumes:
+      - ./ros2_worm_entrypoint.sh:/home/ffi3/ros2_worm_entrypoint.sh
+
+      # when two ros2 nodes are hosted on the same machine
+      # in this case it is a docker container but with network_mode: host
+      # this means, it will use the network stack of the host machine
+      # this causes DDS to use Shared memory for communcation between both nodes
+      # thats why we need to map /dev/shm into the docker container
+      - /dev/shm:/dev/shm
+    entrypoint: 
+      - /home/ffi3/ros2_worm_entrypoint.sh
