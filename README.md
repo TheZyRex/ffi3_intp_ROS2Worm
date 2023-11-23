@@ -3,7 +3,7 @@
 - [Navigation Node](#navigation-node)
 - [Display Node(s)](#display-nodes)
 - [Grid Node](#grid-node)
-- [ARM64 & AMD64 Dockerimage](#arm64--and64-dockerimage)
+- [ARM64 & AMD64 Dockerimage](#arm64--amd64-dockerimage)
 
 ---
 
