@@ -27,6 +27,11 @@ subscribes to the following topics:
 
 ## Grid Node
 
+Command line Arguments:
+
+- numPlayers: int
+-> e.g. ros2 run ros2_worm_multiplayer worm_grid_node --ros-args -p numPlayers:=1
+
 publishes to the following topics:
 
 - GameStart  -- using Message Type: std_msgs::msg::Int32  

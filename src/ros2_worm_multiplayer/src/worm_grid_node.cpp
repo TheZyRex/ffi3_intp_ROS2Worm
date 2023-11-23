@@ -86,6 +86,8 @@ class WormGridNode : public rclcpp::Node {
     std::vector<int32_t> joinedPlayers;
     std::map<int32_t, Worm> worms;  // dictionary of the joined worms and associated data structures
 
+    int maxNumPlayers;
+
   private:
     // callback groups
     rclcpp::CallbackGroup::SharedPtr main_cbg_;
@@ -139,6 +141,11 @@ class WormGridNode : public rclcpp::Node {
  * @brief Construct the Node and initialize instance members.
 */
 WormGridNode::WormGridNode() : Node("worm_grid_node") {
+  // get number of players from command line
+  declare_parameter("numPlayers", WormConstants::MAX_PLAYERS); 
+  get_parameter("numPlayers", maxNumPlayers);
+
+  // publishers
   gameId_publisher_ = this->create_publisher<std_msgs::msg::Int32>(WormTopics::GameStart, WormConstants::GRID_MESSAGE_QUEUE_LENGTH);
   boardInfo_publisher_ = this->create_publisher<ros2_worm_multiplayer::msg::Board>(WormTopics::BoardInfo, WormConstants::GRID_MESSAGE_QUEUE_LENGTH);
 
@@ -221,7 +228,7 @@ WormGridNode::WormGridNode() : Node("worm_grid_node") {
  * @brief Lobby for players to wait in.
 */
 void WormGridNode::runLobby() {
-  if (joinedPlayers.size() < WormConstants::MAX_PLAYERS) {
+  if (joinedPlayers.size() < maxNumPlayers) {
     GameIdPublishCallback();
   } else {
     RCLCPP_INFO(this->get_logger(), "Starting game.");
