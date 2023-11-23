@@ -1,48 +1,93 @@
 # ffi3_intp_ROS2Worm
 
+- [Navigation Node](#navigation-node)
+- [Display Node(s)](#display-nodes)
+- [Grid Node](#grid-node)
+- [ARM64 & AMD64 Dockerimage](#arm64--and64-dockerimage)
+
+---
+
 ## Navigation Node
-publishes to the following topics:
 
-- PlayerInput -- using Message Type: ros2_worm_multiplayer::msg::PlayerInput
+The Navigation Node handles the direction of the worm and joins a game.
 
-subscribes to the following topics:
+### Publishes
 
-- GameStart -- using message type: std_msgs::msg:Int32
+- **Topic:** `PlayerInput`
+  - **Message Type:** `ros2_worm_multiplayer::msg::PlayerInput`
 
-Will make a request to a server to join the game -- using Interface: ros2_worm_multiplayer::srv::JoinServer
+### Subscribes
+
+- **Topic:** `GameStart`
+  - **Message Type:** `std_msgs::msg::Int32`
+
+### Requests
+
+The Navigation Node interacts with a server by making a request to join the game.
+
+- **Service Interface:** `ros2_worm_multiplayer::srv::JoinServer`
+
+This request enables seamless integration with the gaming environment, enhancing the overall functionality of the system.
+
+---
 
 ## Display Node(s)
 
-Commandline Arguments:
-- wormID (only cpp version)
--> e.g. ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=549528476
+The Display Node(s) play a vital role in visualizing the game state.
 
-publishes to the following topics:
+### Commandline Arguments
 
-- None
-  
-subscribes to the following topics:
+- **wormID (cpp version only):**
+  - Example: `ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=549528476`
 
-- BoardInfo -- using Message Type: ros2_worm_multiplayer::msg::Board
+### Publishes
+
+The Display Node(s) do not publish to any topics.
+
+### Subscribes
+
+- **Topic:** `BoardInfo`
+  - **Message Type:** `ros2_worm_multiplayer::msg::Board`
+
+---
 
 ## Grid Node
 
-publishes to the following topics:
+The Grid Node is responsible for managing game grid-related functionality.
 
-- GameStart  -- using Message Type: std_msgs::msg::Int32  
-  - used to transmit a gameId to identify a starting game
-- BoardInfo  -- using Message Type: ros2_worm_multiplayer::msg::Board  
-  - used to transmit all of the contents of the game board in the Board datastructure
+### Publishes
 
-subscribes to the following topics:
+- **Topic:** `GameStart`
+  - **Message Type:** `std_msgs::msg::Int32`
+    - Used to transmit a gameId to identify the start of a game.
+- **Topic:** `BoardInfo`
+  - **Message Type:** `ros2_worm_multiplayer::msg::Board`
+    - Used to transmit all contents of the game board in the `Board` data structure.
 
-- PlayerInput  -- using Message Type: ros2_worm_multiplayer::msg::PlayerInput  
+### Subscribes
 
-Will respond to a Client, giving them their wormid -- using Interface: ros2_worm_multiplayer::srv::JoinServer
+- **Topic:** `PlayerInput`
+  - **Message Type:** `ros2_worm_multiplayer::msg::PlayerInput`
 
-# dockerized ROS2 Application
-docker image available from: hub.docker.com
+### Responds To
 
-image name: thezyrex/ros2_worm_multiplayer:latest
+The Grid Node responds to a client, providing them with their wormID.
 
-docker compose file is included in this repository and can be found in ./docker-image
+- **Service Interface:** `ros2_worm_multiplayer::srv::JoinServer`
+
+---
+
+## ARM64 & AMD64 Dockerimage
+
+A Docker image for hosting the game server is accessible on hub.docker.com.
+
+```bash
+# clone this repository
+git clone https://github.com/TheZyRex/ffi3_intp_ROS2Worm.git
+
+# depending on which platform u are using: amd64 or arm64
+cd ffi3_intp_ROS2Worm/docker-images/amd64
+
+# start the container using docker compose
+docker compose -f docker-compose-amd64.yml up
+```
