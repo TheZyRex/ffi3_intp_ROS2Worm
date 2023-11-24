@@ -37,8 +37,8 @@ if [ -d "$ROS2_INSTALL_DIR" ]; then
 				exit 1
 			}
 
-			echo "Starting worm_grid_node..."
-			ros2 run ros2_worm_multiplayer worm_grid_node
+			echo "Starting worm_grid_node for $WORM_MIN_PLAYERS players to join"
+			ros2 run ros2_worm_multiplayer worm_grid_node --ros-args -p numPlayers:=$WORM_MIN_PLAYERS
 		fi
 else
     echo "Error: ROS 2 installation directory not found: $ROS2_INSTALL_DIR"
