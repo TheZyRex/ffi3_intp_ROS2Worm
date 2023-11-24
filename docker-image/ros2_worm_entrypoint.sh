@@ -19,7 +19,6 @@ if [ -d "$ROS2_INSTALL_DIR" ]; then
 		# pull the lastest version
 		git pull || { 
 			echo "Error: Git pull failed" 
-			exit 1
 		}
 
 		echo "Buildind worm package - can take upto 2hrs... be patient"
