@@ -1,7 +1,7 @@
 version: '3'
 services:
   ros2_worm_server_1:
-    image: thezyrex/ros2_worm_multiplayer:arm64
+    image: thezyrex/ros2_worm_multiplayer:amd64
     container_name: worm_server_1
     user: "1000:1000"
     network_mode: host
@@ -25,7 +25,7 @@ services:
       - /home/ffi3/ros2_worm_entrypoint.sh
 
   ros2_worm_server_2:
-    image: thezyrex/ros2_worm_multiplayer:arm64
+    image: thezyrex/ros2_worm_multiplayer:amd64
     container_name: worm_server_2
     user: "1000:1000"
     network_mode: host

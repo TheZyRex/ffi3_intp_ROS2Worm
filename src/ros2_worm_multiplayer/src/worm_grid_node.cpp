@@ -118,7 +118,7 @@ class WormGridNode : public rclcpp::Node {
 
     // methods to implement specific gameplay functions
     void generateLevel();
-    void generateNewWorm(int32_t wormId);
+    void generateNewWorm(int32_t& wormId);
     void generateFood();
 
     // callback methods for publishing
@@ -233,7 +233,7 @@ void WormGridNode::runLobby() {
   } else {
     RCLCPP_INFO(this->get_logger(), "Starting game.");
     
-    for (auto id: joinedPlayers) {
+    for (auto& id: joinedPlayers) {
       generateNewWorm(id);
     }
 
@@ -416,7 +416,7 @@ void WormGridNode::generateLevel() {
 /**
  * @brief Put a new player on the board.
 */
-void WormGridNode::generateNewWorm(int32_t wormId) {
+void WormGridNode::generateNewWorm(int32_t& wormId) {
   int currX = rand() % WormConstants::BOARD_LENGTH;
   int currY = rand() % WormConstants::BOARD_HEIGHT;
 
