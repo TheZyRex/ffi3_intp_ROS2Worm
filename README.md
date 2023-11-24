@@ -89,9 +89,9 @@ A Docker image for hosting the game server is accessible on hub.docker.com.
 # clone this repository
 git clone https://github.com/TheZyRex/ffi3_intp_ROS2Worm.git
 
-# depending on which platform u are using: amd64 or arm64
-cd ffi3_intp_ROS2Worm/docker-images/amd64
+# change into git repo
+cd ffi3_intp_ROS2Worm/docker-images
 
-# start the container using docker compose
+# start the container using docker compose - depending on which platform you are using amd64/arm64
 docker compose -f docker-compose-amd64.yml up
 ```
