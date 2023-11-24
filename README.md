@@ -29,6 +29,17 @@ The Navigation Node interacts with a server by making a request to join the game
 
 This request enables seamless integration with the gaming environment, enhancing the overall functionality of the system.
 
+### How to use
+
+```bash
+# first source the overlay
+source install/setup.bash
+
+# start the navigation node with parametersm
+# true = use python display -- false = use ncurses display
+ros2 run ros2_worm_multiplayer worm_navigation_node --ros-args -p pyDisplay:=true
+```
+
 ---
 
 ## Display Node(s)
