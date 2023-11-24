@@ -75,6 +75,9 @@ class NavigationNode : public rclcpp::Node
 		int cur_wormid;
 
 		/* */
+		bool use_python_display;
+
+		/* */
 		enum gamestates cur_gamestate;
 
 		/* Msg type that includes direction that a specifc worm goes */
@@ -107,6 +110,11 @@ NavigationNode::NavigationNode()
 	/* NCurses Init */
 	initializeCursesApplication();
 
+	/* Set parameters */
+	this->declare_parameter("pyDisplay", true);
+	this->get_parameter("pyDisplay", this->use_python_display);
+
+	/* Callback Groups init */
 	this->client_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 	this->sub_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
@@ -199,8 +207,21 @@ void NavigationNode::join_gameserver()
 		  this->pInput.wormid = this->cur_wormid;
 
 			std::ostringstream start_command;
-			start_command << "gnome-terminal --geometry=" << std::to_string(WormConstants::BOARD_LENGTH) << "x" << std::to_string(WormConstants::BOARD_HEIGHT) 
-										<< " -- bash -i -c 'ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=" << std::to_string(this->cur_wormid) << "'";
+
+			/* depending on start parameters, start the python or ncurses display */
+			if (this->use_python_display)
+			{
+			  start_command << "gnome-terminal --geometry=" << std::to_string(WormConstants::BOARD_LENGTH) << "x" << std::to_string(WormConstants::BOARD_HEIGHT) 
+			  							<< " -- bash -i -c 'ros2 run ros2_worm_multiplayer worm_display_node.py --ros-args -p wormID:=" << std::to_string(this->cur_wormid) << "'";
+
+			}
+			else
+			{
+
+			  start_command << "gnome-terminal --geometry=" << std::to_string(WormConstants::BOARD_LENGTH) << "x" << std::to_string(WormConstants::BOARD_HEIGHT) 
+			  							<< " -- bash -i -c 'ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=" << std::to_string(this->cur_wormid) << "'";
+
+			}
 
 			/* Start display node in separate terminal */
     	system(start_command.str().c_str());
