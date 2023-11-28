@@ -38,11 +38,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 # Display Node
 add_executable(worm_display_node
 	src/worm_display_node.cpp
-  src/prep.c
-	src/messages.c
-	src/board_model.c
-	src/worm_model.c
-	src/worm.c
 )
 ament_target_dependencies(worm_display_node rclcpp std_msgs)
 

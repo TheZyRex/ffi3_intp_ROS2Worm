@@ -20,7 +20,6 @@
 
 extern "C" {
 #include "prep.h"
-#include "worm.h"
 }
 
 /**
