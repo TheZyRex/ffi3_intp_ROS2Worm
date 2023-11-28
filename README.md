@@ -48,7 +48,7 @@ The Display Node(s) play a vital role in visualizing the game state.
 
 ### Commandline Arguments
 
-- **wormID (cpp version only):**
+- **wormID:**
   - Example: `ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=549528476`
 
 ### Publishes
@@ -59,6 +59,18 @@ The Display Node(s) do not publish to any topics.
 
 - **Topic:** `BoardInfo`
   - **Message Type:** `ros2_worm_multiplayer::msg::Board`
+
+```bash
+# first source the overlay
+source install/setup.bash
+
+# start the display node with parameters
+# wormID:=*YOUR_ID* -> dye specified worm with unique color, example:
+ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=549528476
+
+# or start it without parameters
+ros2 run ros2_worm_multiplayer worm_display_node
+```
 
 ---
 
