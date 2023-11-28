@@ -78,6 +78,16 @@ ros2 run ros2_worm_multiplayer worm_display_node
 
 The Grid Node is responsible for managing game grid-related functionality.
 
+### How to use
+
+```bash
+source install/setup.bash
+
+# start the grid node with parameters
+# numPlayers: number of players, must be greater than or equal to 1
+ros2 run ros2_worm_multiplayer worm_grid_node --ros-args -p numPlayers:=2
+```
+
 ### Command line Arguments
 - numPlayers: int
 -> e.g. ros2 run ros2_worm_multiplayer worm_grid_node --ros-args -p numPlayers:=1
