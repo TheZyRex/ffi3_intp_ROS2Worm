@@ -64,6 +64,8 @@ The Display Node(s) do not publish to any topics.
 # first source the overlay
 source install/setup.bash
 
+# If you wish to use the python node, please use worm_display_node.py instead of worm_display_node
+
 # start the display node with parameters
 # wormID:=*YOUR_ID* -> dye specified worm with unique color, example:
 ros2 run ros2_worm_multiplayer worm_display_node --ros-args -p wormID:=549528476
